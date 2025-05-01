@@ -31,7 +31,7 @@ class CVProcessor:
             "cursorclass": pymysql.cursors.DictCursor,
         }
 
-    async def process_cv(self, name: str, email: str, pdf_content: bytes):
+    async def process_cv(self, name: str, email: str, pdf_content: bytes) -> dict:
         try:
             # Extract text from PDF
             text = self._extract_text_from_pdf(pdf_content)
@@ -58,10 +58,16 @@ class CVProcessor:
             logger.error(f"Error processing CV: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Error processing CV: {str(e)}")
 
-    async def get_all_candidates(self):
+    async def get_all_candidates(self) -> list:
         """Get all candidates from the database"""
         try:
-            conn = pymysql.connect(**self.db_config)
+            conn = pymysql.connect(
+                host=self.db_config["host"],
+                user=self.db_config["user"],
+                password=self.db_config["password"],
+                database=self.db_config["database"],
+                cursorclass=self.db_config["cursorclass"]
+            )
             try:
                 with conn.cursor() as cursor:
                     cursor.execute("SELECT * FROM candidates")
@@ -81,10 +87,16 @@ class CVProcessor:
             logger.error(f"Database error: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
-    async def _save_candidate_to_db(self, data):
+    async def _save_candidate_to_db(self, data: dict) -> None:
         """Save candidate data to the database"""
         try:
-            conn = pymysql.connect(**self.db_config)
+            conn = pymysql.connect(
+                host=self.db_config["host"],
+                user=self.db_config["user"],
+                password=self.db_config["password"],
+                database=self.db_config["database"],
+                cursorclass=self.db_config["cursorclass"]
+            )
             try:
                 with conn.cursor() as cursor:
                     sql = """
@@ -120,7 +132,7 @@ class CVProcessor:
         reader = PdfReader(io.BytesIO(content))
         return "\n".join([page.extract_text() for page in reader.pages])
 
-    async def _extract_with_ai(self, text: str):
+    async def _extract_with_ai(self, text: str) -> dict:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -147,7 +159,7 @@ class CVProcessor:
         return self._parse_ai_response(response.choices[0].message["content"])
 
     def _parse_ai_response(self, content: str) -> dict:
-        result = {
+        result: dict = {
             "education": "",
             "job_history": "",
             "skills": [],
@@ -191,15 +203,16 @@ class CVProcessor:
                 continue
 
             if current_section == "education":
-                result["education"] += line + " "
+                result["education"] = result["education"] + line + " "
             elif current_section == "job_history":
-                result["job_history"] += line + " "
+                result["job_history"] = result["job_history"] + line + " "
             elif current_section == "skills" and line.startswith("-"):
-                result["skills"].append(line[1:].strip())
+                if isinstance(result["skills"], list):
+                    result["skills"].append(line[1:].strip())
 
         return result
 
-    async def _evaluate_candidate(self, data: dict):
+    async def _evaluate_candidate(self, data: dict) -> dict:
         profile = "Web developer with PHP, Python, JavaScript experience in Northern Italy"
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
