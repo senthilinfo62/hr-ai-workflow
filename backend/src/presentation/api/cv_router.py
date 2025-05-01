@@ -2,7 +2,7 @@
 import logging
 from typing import List
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from src.domain.schemas.candidate_schema import CandidateCreate, CandidateResponse
 from src.infrastructure.ai.cv_processor import CVProcessor

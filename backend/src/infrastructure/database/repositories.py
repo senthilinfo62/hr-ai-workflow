@@ -2,6 +2,7 @@
 from sqlalchemy.orm import Session
 
 from src.domain.entities.candidate import CandidateCreate
+from src.infrastructure.database.models import Candidate as CandidateModel
 
 
 class CandidateRepository:

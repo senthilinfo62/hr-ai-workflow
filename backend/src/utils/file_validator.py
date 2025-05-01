@@ -1,5 +1,3 @@
-import os
-
 import magic
 from fastapi import HTTPException, UploadFile
 
