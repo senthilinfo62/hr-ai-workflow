@@ -1,10 +1,11 @@
-from flask import Flask, request, jsonify
-import os
-import openai
-from PyPDF2 import PdfReader
 import io
-import pymysql
 import json
+import os
+
+import openai
+import pymysql
+from flask import Flask, jsonify, request
+from PyPDF2 import PdfReader
 
 app = Flask(__name__)
 

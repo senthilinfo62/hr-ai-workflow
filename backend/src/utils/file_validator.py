@@ -1,6 +1,7 @@
-from fastapi import UploadFile, HTTPException
-import magic
 import os
+
+import magic
+from fastapi import HTTPException, UploadFile
 
 # Maximum file size (5MB)
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB in bytes

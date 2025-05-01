@@ -1,10 +1,12 @@
 # backend/src/presentation/api/cv_router.py
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
-from src.infrastructure.ai.cv_processor import CVProcessor
-from src.domain.schemas.candidate_schema import CandidateCreate, CandidateResponse
-from src.utils.file_validator import validate_file
-from typing import List
 import logging
+from typing import List
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+
+from src.domain.schemas.candidate_schema import CandidateCreate, CandidateResponse
+from src.infrastructure.ai.cv_processor import CVProcessor
+from src.utils.file_validator import validate_file
 
 # Set up logging
 logger = logging.getLogger(__name__)

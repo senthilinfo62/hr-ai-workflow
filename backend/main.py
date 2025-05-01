@@ -1,7 +1,8 @@
+import os
+
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
-import os
 
 from src.presentation.api.cv_router import router as cv_router
 

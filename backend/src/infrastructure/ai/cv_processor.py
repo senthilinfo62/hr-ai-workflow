@@ -1,12 +1,13 @@
 # backend/src/infrastructure/ai/cv_processor.py
-import openai
-from PyPDF2 import PdfReader
 import io
-import os
-import logging
-import pymysql
 import json
+import logging
+import os
+
+import openai
+import pymysql
 from fastapi import HTTPException
+from PyPDF2 import PdfReader
 
 # Set up logging
 logger = logging.getLogger(__name__)

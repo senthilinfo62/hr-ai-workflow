@@ -1,6 +1,8 @@
 # backend/src/infrastructure/database/repositories.py
 from sqlalchemy.orm import Session
+
 from src.domain.entities.candidate import CandidateCreate
+
 
 class CandidateRepository:
     def __init__(self, db: Session):
