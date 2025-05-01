@@ -3,6 +3,7 @@ import logging
 from typing import List
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from pydantic import EmailStr
 
 from src.domain.schemas.candidate_schema import CandidateCreate, CandidateResponse
 from src.infrastructure.ai.cv_processor import CVProcessor
@@ -17,7 +18,7 @@ router = APIRouter()
 @router.post("/candidates", response_model=CandidateResponse, status_code=201)
 async def create_candidate(
     name: str = Form(...),
-    email: str = Form(...),
+    email: EmailStr = Form(...),
     cv: UploadFile = File(...),
 ):
     try:
