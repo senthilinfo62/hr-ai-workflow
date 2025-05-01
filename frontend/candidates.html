@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR AI Workflow - Candidates</title>
+    <style>
+        :root {
+            font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+            line-height: 1.5;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.87);
+            background-color: #242424;
+        }
+
+        body {
+            margin: 0;
+            min-width: 320px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .header {
+            background-color: #1a1a1a;
+            padding: 1rem 0;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .header nav ul {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .header a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .candidates-list {
+            margin: 2rem auto;
+        }
+
+        .candidate-card {
+            background-color: #333;
+            border-radius: 4px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .candidate-card h3 {
+            margin-top: 0;
+            border-bottom: 1px solid #444;
+            padding-bottom: 0.5rem;
+        }
+
+        .section {
+            margin-top: 1rem;
+        }
+
+        .section h4 {
+            margin-bottom: 0.5rem;
+            color: #646cff;
+        }
+
+        .skills-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .skill-tag {
+            background-color: #444;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .score {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #646cff;
+        }
+
+        .loading {
+            text-align: center;
+            margin: 2rem 0;
+            font-size: 1.2rem;
+        }
+
+        .error {
+            color: #ff6b6b;
+            text-align: center;
+            margin: 2rem 0;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1>HR AI Workflow</h1>
+            <nav>
+                <ul>
+                    <li>
+                        <a href="/">Upload CV</a>
+                    </li>
+                    <li>
+                        <a href="/candidates.html">View Candidates</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="candidates-list">
+            <h2>All Candidates</h2>
+
+            <div id="loading" class="loading">Loading candidates...</div>
+            <div id="error" class="error" style="display: none;"></div>
+
+            <div id="candidatesList"></div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const loadingDiv = document.getElementById('loading');
+            const errorDiv = document.getElementById('error');
+            const candidatesListDiv = document.getElementById('candidatesList');
+
+            try {
+                const response = await fetch('http://localhost:8000/api/cv/candidates');
+
+                // Handle different HTTP status codes
+                if (!response.ok) {
+                    if (response.status === 500) {
+                        throw new Error('Server error. Please try again later');
+                    } else if (response.status === 404) {
+                        throw new Error('Candidates not found');
+                    } else {
+                        throw new Error('Failed to fetch candidates');
+                    }
+                }
+
+                const candidates = await response.json();
+
+                // Validate response data
+                if (!Array.isArray(candidates)) {
+                    throw new Error('Invalid response format');
+                }
+
+                loadingDiv.style.display = 'none';
+
+                if (candidates.length === 0) {
+                    candidatesListDiv.innerHTML = '<p>No candidates found. Upload some CVs first!</p>';
+                    return;
+                }
+
+                // Render candidates
+                candidates.forEach(candidate => {
+                    const candidateCard = document.createElement('div');
+                    candidateCard.className = 'candidate-card';
+
+                    candidateCard.innerHTML = `
+                        <h3>${candidate.name}</h3>
+                        <p><strong>Email:</strong> ${candidate.email}</p>
+                        <p><strong>Phone:</strong> ${candidate.phone || 'N/A'}</p>
+                        <p><strong>Location:</strong> ${candidate.city || 'N/A'}</p>
+
+                        <div class="section">
+                            <h4>Education</h4>
+                            <p>${candidate.education || 'N/A'}</p>
+                        </div>
+
+                        <div class="section">
+                            <h4>Job History</h4>
+                            <p>${candidate.job_history || 'N/A'}</p>
+                        </div>
+
+                        <div class="section">
+                            <h4>Skills</h4>
+                            <div class="skills-list">
+                                ${candidate.skills && candidate.skills.length > 0
+                                    ? candidate.skills.map(skill => `<span class="skill-tag">${skill}</span>`).join('')
+                                    : '<p>No skills listed</p>'}
+                            </div>
+                        </div>
+
+                        <div class="section">
+                            <h4>Score</h4>
+                            <p class="score">${candidate.score}/10</p>
+                        </div>
+                    `;
+
+                    candidatesListDiv.appendChild(candidateCard);
+                });
+
+            } catch (error) {
+                console.error('Error fetching candidates:', error);
+                loadingDiv.style.display = 'none';
+                errorDiv.textContent = 'Error loading candidates. Please try again later.';
+                errorDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

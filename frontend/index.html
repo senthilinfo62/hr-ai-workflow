@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR AI Workflow</title>
+    <style>
+        :root {
+            font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+            line-height: 1.5;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.87);
+            background-color: #242424;
+        }
+
+        body {
+            margin: 0;
+            min-width: 320px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .header {
+            background-color: #1a1a1a;
+            padding: 1rem 0;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .header nav ul {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .header a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .candidate-upload {
+            max-width: 600px;
+            margin: 2rem auto;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #444;
+            background-color: #333;
+            color: white;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #646cff;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #535bf2;
+        }
+
+        button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+
+        .error {
+            color: #ff6b6b;
+            margin: 1rem 0;
+        }
+
+        .result {
+            margin-top: 2rem;
+            padding: 1rem;
+            background-color: #333;
+            border-radius: 4px;
+        }
+
+        .result-card {
+            padding: 1rem;
+            background-color: #2a2a2a;
+            border-radius: 4px;
+        }
+
+        .section {
+            margin-top: 1rem;
+        }
+
+        .section h5 {
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid #444;
+            padding-bottom: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1>HR AI Workflow</h1>
+            <nav>
+                <ul>
+                    <li>
+                        <a href="/">Upload CV</a>
+                    </li>
+                    <li>
+                        <a href="/candidates.html">View Candidates</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="candidate-upload">
+            <h2>Upload Candidate CV</h2>
+
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input
+                        type="text"
+                        id="name"
+                        required
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input
+                        type="email"
+                        id="email"
+                        required
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label for="cv">CV (PDF)</label>
+                    <input
+                        type="file"
+                        id="cv"
+                        accept=".pdf"
+                        required
+                    />
+                </div>
+
+                <div id="error" class="error" style="display: none;"></div>
+
+                <button type="submit" id="submitBtn">
+                    Upload and Process
+                </button>
+            </form>
+
+            <div id="result" class="result" style="display: none;">
+                <h3>Results</h3>
+                <div class="result-card" id="resultCard">
+                    <!-- Results will be displayed here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Validation functions
+        function validateName(name) {
+            return name.trim().length >= 2 && name.trim().length <= 100;
+        }
+
+        function validateEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        function validateFile(file) {
+            // Check if file exists
+            if (!file) return { valid: false, message: 'Please select a file' };
+
+            // Check file type
+            if (file.type !== 'application/pdf') {
+                return { valid: false, message: 'Only PDF files are allowed' };
+            }
+
+            // Check file size (max 5MB)
+            const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+            if (file.size > maxSize) {
+                return { valid: false, message: 'File size must be less than 5MB' };
+            }
+
+            return { valid: true };
+        }
+
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const cvFile = document.getElementById('cv').files[0];
+            const submitBtn = document.getElementById('submitBtn');
+            const errorDiv = document.getElementById('error');
+            const resultDiv = document.getElementById('result');
+
+            // Validate inputs
+            if (!validateName(name)) {
+                errorDiv.textContent = 'Name must be between 2 and 100 characters';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (!validateEmail(email)) {
+                errorDiv.textContent = 'Please enter a valid email address';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            const fileValidation = validateFile(cvFile);
+            if (!fileValidation.valid) {
+                errorDiv.textContent = fileValidation.message;
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            submitBtn.textContent = 'Processing...';
+            submitBtn.disabled = true;
+            errorDiv.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('name', name.trim());
+            formData.append('email', email.trim());
+            formData.append('cv', cvFile);
+
+            try {
+                const response = await fetch('http://localhost:8000/api/cv/candidates', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                // Handle different HTTP status codes
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+
+                    if (response.status === 400) {
+                        // Validation error
+                        throw new Error(errorData?.detail || 'Invalid input data');
+                    } else if (response.status === 413) {
+                        // File too large
+                        throw new Error('File size too large');
+                    } else if (response.status === 415) {
+                        // Unsupported media type
+                        throw new Error('Unsupported file type');
+                    } else if (response.status === 500) {
+                        // Server error
+                        throw new Error('Server error. Please try again later');
+                    } else {
+                        throw new Error('An error occurred. Please try again');
+                    }
+                }
+
+                const result = await response.json();
+
+                // Display result
+                const resultCard = document.getElementById('resultCard');
+                resultCard.innerHTML = `
+                    <h4>${result.name}</h4>
+                    <p><strong>Email:</strong> ${result.email}</p>
+                    <p><strong>Phone:</strong> ${result.phone || 'N/A'}</p>
+                    <p><strong>City:</strong> ${result.city || 'N/A'}</p>
+
+                    <div class="section">
+                        <h5>Education</h5>
+                        <p>${result.education || 'N/A'}</p>
+                    </div>
+
+                    <div class="section">
+                        <h5>Job History</h5>
+                        <p>${result.job_history || 'N/A'}</p>
+                    </div>
+
+                    <div class="section">
+                        <h5>Skills</h5>
+                        <ul>
+                            ${result.skills.map(skill => `<li>${skill}</li>`).join('') || '<li>N/A</li>'}
+                        </ul>
+                    </div>
+
+                    <div class="section">
+                        <h5>Score</h5>
+                        <p>${result.score}/10</p>
+                    </div>
+                `;
+
+                resultDiv.style.display = 'block';
+            } catch (err) {
+                console.error(err);
+                errorDiv.textContent = 'Error processing CV. Please try again.';
+                errorDiv.style.display = 'block';
+            } finally {
+                submitBtn.textContent = 'Upload and Process';
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
