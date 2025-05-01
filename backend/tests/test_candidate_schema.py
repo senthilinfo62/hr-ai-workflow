@@ -1,4 +1,5 @@
 """Tests for candidate schema."""
+
 import pytest
 from pydantic import ValidationError
 
@@ -16,7 +17,7 @@ def test_candidate_create_invalid_name():
     """Test creating a candidate with an invalid name."""
     with pytest.raises(ValidationError):
         CandidateCreate(name="", email="john@example.com")
-    
+
     with pytest.raises(ValidationError):
         CandidateCreate(name="J", email="john@example.com")  # Too short
 
@@ -39,9 +40,9 @@ def test_candidate_response():
         education="Bachelor's in Computer Science",
         job_history="Software Engineer at XYZ Corp",
         skills=["Python", "JavaScript", "SQL"],
-        score=8
+        score=8,
     )
-    
+
     assert candidate.id == 1
     assert candidate.name == "John Doe"
     assert candidate.email == "john@example.com"
