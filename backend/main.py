@@ -20,9 +20,11 @@ app.add_middleware(
 # Include routers
 app.include_router(cv_router, prefix="/api/cv", tags=["CV Processing"])
 
+
 @app.get("/")
 async def root():
     return {"message": "Welcome to HR AI Workflow API"}
+
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))

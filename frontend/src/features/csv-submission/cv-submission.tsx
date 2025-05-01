@@ -2,10 +2,20 @@
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
 
-export default function CVForm() {
-  const { register, handleSubmit, formState: { errors } } = useForm();
+interface FormData {
+  name: string;
+  email: string;
+  cv: FileList;
+}
 
-  const onSubmit = async (data: any) => {
+export default function CVForm() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>();
+
+  const onSubmit = async (data: FormData) => {
     const formData = new FormData();
     formData.append('name', data.name);
     formData.append('email', data.email);
@@ -13,7 +23,7 @@ export default function CVForm() {
 
     try {
       const response = await axios.post('/api/candidates', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
       alert('CV submitted successfully!');
     } catch (error) {
@@ -64,4 +74,5 @@ export default function CVForm() {
       </form>
     </div>
   );
+}
 }

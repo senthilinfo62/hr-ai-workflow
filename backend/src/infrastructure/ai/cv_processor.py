@@ -12,6 +12,7 @@ from PyPDF2 import PdfReader
 # Set up logging
 logger = logging.getLogger(__name__)
 
+
 class CVProcessor:
     def __init__(self):
         # Set OpenAI API key
@@ -23,11 +24,11 @@ class CVProcessor:
 
         # Database connection parameters
         self.db_config = {
-            'host': os.getenv('DB_HOST', 'db'),
-            'user': os.getenv('DB_USER', 'root'),
-            'password': os.getenv('DB_PASSWORD', 'admin@123'),
-            'database': os.getenv('DB_NAME', 'hr_ai'),
-            'cursorclass': pymysql.cursors.DictCursor
+            "host": os.getenv("DB_HOST", "db"),
+            "user": os.getenv("DB_USER", "root"),
+            "password": os.getenv("DB_PASSWORD", "admin@123"),
+            "database": os.getenv("DB_NAME", "hr_ai"),
+            "cursorclass": pymysql.cursors.DictCursor,
         }
 
     async def process_cv(self, name: str, email: str, pdf_content: bytes):
@@ -36,7 +37,9 @@ class CVProcessor:
             text = self._extract_text_from_pdf(pdf_content)
 
             if not text.strip():
-                raise ValueError("Could not extract text from PDF. The file may be corrupted or empty.")
+                raise ValueError(
+                    "Could not extract text from PDF. The file may be corrupted or empty."
+                )
 
             # Extract structured data
             extracted_data = await self._extract_with_ai(text)
@@ -45,12 +48,7 @@ class CVProcessor:
             evaluation = await self._evaluate_candidate(extracted_data)
 
             # Combine results
-            result = {
-                **extracted_data,
-                **evaluation,
-                "name": name,
-                "email": email
-            }
+            result = {**extracted_data, **evaluation, "name": name, "email": email}
 
             # Save to database
             await self._save_candidate_to_db(result)
@@ -71,10 +69,10 @@ class CVProcessor:
 
                     # Convert JSON strings back to lists
                     for candidate in candidates:
-                        if candidate['skills'] and isinstance(candidate['skills'], str):
-                            candidate['skills'] = json.loads(candidate['skills'])
+                        if candidate["skills"] and isinstance(candidate["skills"], str):
+                            candidate["skills"] = json.loads(candidate["skills"])
                         else:
-                            candidate['skills'] = []
+                            candidate["skills"] = []
 
                 return candidates
             finally:
@@ -94,21 +92,24 @@ class CVProcessor:
                     (name, email, phone, city, birthdate, education, job_history, skills, score)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                     """
-                    cursor.execute(sql, (
-                        data.get('name', ''),
-                        data.get('email', ''),
-                        data.get('phone', ''),
-                        data.get('city', ''),
-                        data.get('birthdate', ''),
-                        data.get('education', ''),
-                        data.get('job_history', ''),
-                        json.dumps(data.get('skills', [])),
-                        data.get('score', 0)
-                    ))
+                    cursor.execute(
+                        sql,
+                        (
+                            data.get("name", ""),
+                            data.get("email", ""),
+                            data.get("phone", ""),
+                            data.get("city", ""),
+                            data.get("birthdate", ""),
+                            data.get("education", ""),
+                            data.get("job_history", ""),
+                            json.dumps(data.get("skills", [])),
+                            data.get("score", 0),
+                        ),
+                    )
                     conn.commit()
 
                     # Get the ID of the inserted row
-                    data['id'] = cursor.lastrowid
+                    data["id"] = cursor.lastrowid
             finally:
                 conn.close()
         except Exception as e:
@@ -123,8 +124,13 @@ class CVProcessor:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant that extracts information from CVs."},
-                {"role": "user", "content": f"""Extract following details from CV:
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant that extracts information from CVs.",
+                },
+                {
+                    "role": "user",
+                    "content": f"""Extract following details from CV:
                 - Educational qualification (100 words max)
                 - Job history (100 words max)
                 - Technical skills (bulleted list)
@@ -132,10 +138,11 @@ class CVProcessor:
                 - City
                 - Birthdate
 
-                CV: {text}"""}
+                CV: {text}""",
+                },
             ],
             max_tokens=1000,
-            temperature=0.3
+            temperature=0.3,
         )
         return self._parse_ai_response(response.choices[0].message["content"])
 
@@ -146,7 +153,7 @@ class CVProcessor:
             "skills": [],
             "phone": "",
             "city": "",
-            "birthdate": ""
+            "birthdate": "",
         }
 
         # Simple parsing logic - in a real app, this would be more robust
@@ -197,14 +204,20 @@ class CVProcessor:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant that evaluates job candidates."},
-                {"role": "user", "content": f"""Profile wanted: {profile}
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant that evaluates job candidates.",
+                },
+                {
+                    "role": "user",
+                    "content": f"""Profile wanted: {profile}
                 Give score 1-10 and considerations for the following candidate:
 
-                {str(data)}"""}
+                {str(data)}""",
+                },
             ],
             max_tokens=500,
-            temperature=0.3
+            temperature=0.3,
         )
         return self._parse_evaluation(response.choices[0].message["content"])
 
@@ -215,11 +228,10 @@ class CVProcessor:
             if "score" in line.lower():
                 # Try to find a number in the line
                 import re
-                numbers = re.findall(r'\d+', line)
+
+                numbers = re.findall(r"\d+", line)
                 if numbers:
                     score = int(numbers[0])
                     break
 
-        return {
-            "score": score
-        }
+        return {"score": score}

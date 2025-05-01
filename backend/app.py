@@ -9,30 +9,35 @@ from PyPDF2 import PdfReader
 
 app = Flask(__name__)
 
+
 # Configure CORS
 @app.after_request
 def after_request(response):
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
+    response.headers.add("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS")
     return response
+
 
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY", "your_openai_api_key_here")
 
+
 # Database connection
 def get_db_connection():
     return pymysql.connect(
-        host='localhost',
-        user='root',
-        password='admin@123',
-        database='hr_ai',
-        cursorclass=pymysql.cursors.DictCursor
+        host="localhost",
+        user="root",
+        password="admin@123",
+        database="hr_ai",
+        cursorclass=pymysql.cursors.DictCursor,
     )
+
 
 def extract_text_from_pdf(content):
     reader = PdfReader(io.BytesIO(content))
     return "\n".join([page.extract_text() for page in reader.pages])
+
 
 def extract_with_ai(text):
     response = openai.Completion.create(
@@ -47,9 +52,10 @@ def extract_with_ai(text):
 
         CV: {text}""",
         max_tokens=1000,
-        temperature=0.3
+        temperature=0.3,
     )
     return parse_ai_response(response.choices[0].text)
+
 
 def parse_ai_response(content):
     result = {
@@ -58,7 +64,7 @@ def parse_ai_response(content):
         "skills": [],
         "phone": "",
         "city": "",
-        "birthdate": ""
+        "birthdate": "",
     }
 
     # Simple parsing logic
@@ -104,6 +110,7 @@ def parse_ai_response(content):
 
     return result
 
+
 def evaluate_candidate(data):
     profile = "Web developer with PHP, Python, JavaScript experience in Northern Italy"
     response = openai.Completion.create(
@@ -113,9 +120,10 @@ def evaluate_candidate(data):
 
         {str(data)}""",
         max_tokens=500,
-        temperature=0.3
+        temperature=0.3,
     )
     return parse_evaluation(response.choices[0].text)
+
 
 def parse_evaluation(content):
     # Simple parsing to extract score
@@ -124,14 +132,14 @@ def parse_evaluation(content):
         if "score" in line.lower():
             # Try to find a number in the line
             import re
-            numbers = re.findall(r'\d+', line)
+
+            numbers = re.findall(r"\d+", line)
             if numbers:
                 score = int(numbers[0])
                 break
 
-    return {
-        "score": score
-    }
+    return {"score": score}
+
 
 @app.route("/api/cv/candidates", methods=["POST"])
 def create_candidate():
@@ -153,12 +161,7 @@ def create_candidate():
     evaluation = evaluate_candidate(extracted_data)
 
     # Combine results
-    result = {
-        **extracted_data,
-        **evaluation,
-        "name": name,
-        "email": email
-    }
+    result = {**extracted_data, **evaluation, "name": name, "email": email}
 
     # Save to database
     try:
@@ -169,25 +172,29 @@ def create_candidate():
             (name, email, phone, city, birthdate, education, job_history, skills, score)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
-            cursor.execute(sql, (
-                name,
-                email,
-                result.get('phone', ''),
-                result.get('city', ''),
-                result.get('birthdate', ''),
-                result.get('education', ''),
-                result.get('job_history', ''),
-                json.dumps(result.get('skills', [])),
-                result.get('score', 0)
-            ))
+            cursor.execute(
+                sql,
+                (
+                    name,
+                    email,
+                    result.get("phone", ""),
+                    result.get("city", ""),
+                    result.get("birthdate", ""),
+                    result.get("education", ""),
+                    result.get("job_history", ""),
+                    json.dumps(result.get("skills", [])),
+                    result.get("score", 0),
+                ),
+            )
             conn.commit()
-            result['id'] = cursor.lastrowid
+            result["id"] = cursor.lastrowid
     except Exception as e:
         print(f"Database error: {e}")
     finally:
         conn.close()
 
     return jsonify(result)
+
 
 @app.route("/api/cv/candidates", methods=["GET"])
 def get_candidates():
@@ -199,10 +206,10 @@ def get_candidates():
 
             # Convert JSON strings back to lists
             for candidate in candidates:
-                if candidate['skills'] and isinstance(candidate['skills'], str):
-                    candidate['skills'] = json.loads(candidate['skills'])
+                if candidate["skills"] and isinstance(candidate["skills"], str):
+                    candidate["skills"] = json.loads(candidate["skills"])
                 else:
-                    candidate['skills'] = []
+                    candidate["skills"] = []
 
         return jsonify(candidates)
     except Exception as e:
@@ -211,9 +218,11 @@ def get_candidates():
     finally:
         conn.close()
 
+
 @app.route("/", methods=["GET"])
 def root():
     return jsonify({"message": "Welcome to HR AI Workflow API"})
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)

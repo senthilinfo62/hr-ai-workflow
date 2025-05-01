@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+
 @router.post("/candidates", response_model=CandidateResponse, status_code=201)
 async def create_candidate(
     name: str = Form(...),
@@ -29,9 +30,7 @@ async def create_candidate(
         # Process CV
         processor = CVProcessor()
         result = await processor.process_cv(
-            name=candidate_data.name,
-            email=candidate_data.email,
-            pdf_content=contents
+            name=candidate_data.name, email=candidate_data.email, pdf_content=contents
         )
 
         return result
@@ -47,6 +46,7 @@ async def create_candidate(
         # Handle unexpected errors
         logger.error(f"Unexpected error: {str(e)}")
         raise HTTPException(status_code=500, detail="An unexpected error occurred")
+
 
 @router.get("/candidates", response_model=List[CandidateResponse])
 async def get_candidates():

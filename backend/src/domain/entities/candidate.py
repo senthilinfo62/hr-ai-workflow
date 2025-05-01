@@ -11,8 +11,10 @@ class CandidateBase(BaseModel):
     city: Optional[str] = None
     birthdate: Optional[str] = None
 
+
 class CandidateCreate(CandidateBase):
     cv_content: str
+
 
 class CandidateResponse(CandidateBase):
     id: int
@@ -20,6 +22,6 @@ class CandidateResponse(CandidateBase):
     job_history: Optional[str]
     skills: List[str]
     score: Optional[int]
-    
+
     class Config:
         orm_mode = True
