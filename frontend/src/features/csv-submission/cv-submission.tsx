@@ -22,7 +22,7 @@ export default function CVForm() {
     formData.append('cv', data.cv[0]);
 
     try {
-      const response = await axios.post('/api/candidates', formData, {
+      await axios.post('/api/candidates', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       alert('CV submitted successfully!');

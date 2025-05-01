@@ -1,5 +1,5 @@
 # backend/src/infrastructure/database/models.py
-from sqlalchemy import Column, Integer, String, Text, JSON
+from sqlalchemy import JSON, Column, Integer, String, Text
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
