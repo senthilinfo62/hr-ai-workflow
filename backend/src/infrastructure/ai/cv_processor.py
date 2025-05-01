@@ -66,7 +66,7 @@ class CVProcessor:
                 user=self.db_config["user"],
                 password=self.db_config["password"],
                 database=self.db_config["database"],
-                cursorclass=self.db_config["cursorclass"]
+                cursorclass=self.db_config["cursorclass"],
             )
             try:
                 with conn.cursor() as cursor:
@@ -95,7 +95,7 @@ class CVProcessor:
                 user=self.db_config["user"],
                 password=self.db_config["password"],
                 database=self.db_config["database"],
-                cursorclass=self.db_config["cursorclass"]
+                cursorclass=self.db_config["cursorclass"],
             )
             try:
                 with conn.cursor() as cursor:
