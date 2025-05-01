@@ -9,7 +9,9 @@ def test_get_candidates(client):
     # Mock the OpenAI API key
     with patch.dict(os.environ, {"OPENAI_API_KEY": "test_key"}):
         # Mock the CVProcessor.get_all_candidates method
-        with patch("src.infrastructure.ai.cv_processor.CVProcessor.get_all_candidates") as mock_get_all:
+        with patch(
+            "src.infrastructure.ai.cv_processor.CVProcessor.get_all_candidates"
+        ) as mock_get_all:
             # Set up the mock to return a list of candidates
             mock_get_all.return_value = [
                 {
